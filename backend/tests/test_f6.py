@@ -31,7 +31,8 @@ def future_week_start():
     return today-timedelta(days=today.weekday())+timedelta(days=7)
 
 
-def setup_inputs(c,demand_count=2,week_start='2026-11-09'):
+def setup_inputs(c,demand_count=2,week_start=None):
+    week_start=week_start or future_week_start().isoformat()
     assert login(c).status_code==200
     skill=post(c,'/skills',{'code':'brew','name':'咖啡制作'}).json()['data']
     position=post(c,'/positions',{'code':'barista','name':'咖啡师'}).json()['data']

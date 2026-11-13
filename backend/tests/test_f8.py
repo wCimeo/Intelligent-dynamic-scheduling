@@ -1,5 +1,5 @@
 import secrets
-from datetime import datetime as real_datetime
+from datetime import date,datetime as real_datetime,timedelta
 import pytest
 from sqlalchemy import create_engine
 from sqlalchemy.pool import StaticPool
@@ -81,7 +81,8 @@ def test_publish_supersede_diff_and_employee_schedule(fixture):
     with Session(engine) as db:
         assert db.query(OutboxEvent).filter(OutboxEvent.event_type=='schedule.published').count()==2
     assert login(c,'worker1').status_code==200
-    schedules=c.get('/api/v1/me/schedules?from=2026-11-09&to=2026-11-15').json()['data']['items']
+    week_start=date.fromisoformat(period['week_start']);week_end=week_start+timedelta(days=6)
+    schedules=c.get(f"/api/v1/me/schedules?from={week_start.isoformat()}&to={week_end.isoformat()}").json()['data']['items']
     assert len(schedules)==7 and all(item['version_id']==second['id'] for item in schedules)
 
 
@@ -105,13 +106,14 @@ def test_publish_blocks_hard_conflicts_and_stale_period(fixture):
 
 def test_started_shift_is_immutable_after_publication(fixture,monkeypatch):
     import app.main as main_module
+    c,_=fixture
+    period,version,validation=prepare_valid_draft(c)
+    frozen_day=date.fromisoformat(period['week_start'])+timedelta(days=1)
     class FrozenDateTime(real_datetime):
         @classmethod
         def now(cls,tz=None):
-            value=real_datetime(2026,11,10,12,0,0)
+            value=real_datetime(frozen_day.year,frozen_day.month,frozen_day.day,12,0,0)
             return value.replace(tzinfo=tz) if tz else value
-    c,_=fixture
-    period,version,validation=prepare_valid_draft(c)
     monkeypatch.setattr(main_module,'datetime',FrozenDateTime)
     first=publish(c,version,period,validation)
     assert first.status_code==200,first.text
@@ -119,7 +121,8 @@ def test_started_shift_is_immutable_after_publication(fixture,monkeypatch):
     copied=post(c,f"/versions/{version['id']}/copy-to-draft",{'expected_period_revision':period_after['revision']}).json()['data']
     period_after_copy=c.get(f"/api/v1/periods/{period['id']}").json()['data']
     items=[{'shift_key':item['shift_key'],'employee_id':int(item['employee_id']),'position_id':int(item['position_id']),'locked':item['locked']} for item in copied['assignments']]
-    started_keys={shift['shift_key'] for shift in copied['shifts'] if shift['work_date'] in {'2026-11-09','2026-11-10'}}
+    started_dates={period['week_start'],frozen_day.isoformat()}
+    started_keys={shift['shift_key'] for shift in copied['shifts'] if shift['work_date'] in started_dates}
     target_index=next(index for index,item in enumerate(items) if item['shift_key'] in started_keys)
     items[target_index]['locked']=True
     changed=mutate(c,'PUT',f"/versions/{copied['id']}/assignments",{'expected_revision':copied['revision'],'items':items}).json()['data']

@@ -1,4 +1,5 @@
 import pytest
+from datetime import date,timedelta
 from sqlalchemy import create_engine
 from sqlalchemy.pool import StaticPool
 from sqlalchemy.orm import Session
@@ -38,7 +39,8 @@ def test_shared_publication_context_events_and_audit(fixture):
     assert current.json()['data']['id']==version['id']
     assert len(current.json()['data']['assignments'])==14
     employee_id=current.json()['data']['assignments'][0]['employee_id']
-    schedule=c.get(f"/api/v1/shared/employees/{employee_id}/schedule?from=2026-11-09&to=2026-11-15")
+    week_start=date.fromisoformat(period['week_start']);week_end=week_start+timedelta(days=6)
+    schedule=c.get(f"/api/v1/shared/employees/{employee_id}/schedule?from={week_start.isoformat()}&to={week_end.isoformat()}")
     assert schedule.status_code==200 and len(schedule.json()['data']['items'])==7
     events=c.get('/api/v1/shared/outbox-events?after_id=0&state=PENDING')
     assert events.status_code==200 and events.json()['data']['items']
