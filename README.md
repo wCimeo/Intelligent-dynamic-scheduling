@@ -77,6 +77,7 @@ npm.cmd run build
 
 ## 文档
 
+- [同学开发交接说明](docs/student-handover.md)
 - [新环境搭建与交接](docs/handover.md)
 - [协作与分支约定](CONTRIBUTING.md)
 - [总体设计](docs/system-design.md)
