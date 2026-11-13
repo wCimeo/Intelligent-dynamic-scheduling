@@ -1,0 +1,55 @@
+# Local secrets
+.env
+.env.*
+!.env.example
+.envrc
+*.pem
+*.key
+
+# Python
+__pycache__/
+*.py[cod]
+*.pyo
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.coverage
+htmlcov/
+.venv/
+venv/
+*.egg-info/
+
+# Node and frontend build output
+node_modules/
+dist/
+.local-npm-cache/
+.local-build-temp/
+.vite/
+*.tsbuildinfo
+
+# Local database exports and files
+*.sql
+*.dump
+*.sql.gz
+*.sqlite
+*.sqlite3
+*.db
+mysql-data/
+database-dumps/
+
+# Runtime output
+*.log
+logs/
+tmp/
+.tmp/
+
+# Editor and operating-system files
+.idea/
+.vscode/
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# Codex/local agent state
+.codex/
+.agents/

@@ -1,0 +1,9 @@
+# Windows x64 baseline, verified 2026-11-07.
+name: schedule
+channels:
+  - defaults
+dependencies:
+  - python=3.12.16
+  - pip=26.2.2
+  - pip:
+      - -r requirements-schedule.lock.txt
